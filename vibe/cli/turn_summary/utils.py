@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-
 from vibe.core.config import ModelConfig, VibeConfig
 from vibe.core.llm.backend.factory import BACKEND_FACTORY
 from vibe.core.llm.types import BackendLike
@@ -22,7 +20,7 @@ def create_narrator_backend(
         provider = config.get_provider_for_model(NARRATOR_MODEL)
     except ValueError:
         return None
-    if provider.api_key_env_var and not os.getenv(provider.api_key_env_var):
+    if provider.required_api_key_env_var and not provider.resolved_api_key:
         return None
     backend = BACKEND_FACTORY[provider.backend](
         provider=provider, timeout=config.api_timeout

@@ -8,7 +8,6 @@ from enum import StrEnum, auto
 from functools import wraps
 from http import HTTPStatus
 import inspect
-import os
 from pathlib import Path
 import threading
 from threading import Thread
@@ -442,12 +441,11 @@ class AgentLoop:
         if provider is None:
             return None
 
-        api_key_env = provider.api_key_env_var or "MISTRAL_API_KEY"
-        api_key = os.getenv(api_key_env, "")
+        api_key = provider.resolved_api_key or ""
         if not api_key:
             return None
 
-        server_url = get_server_url_from_api_base(provider.api_base)
+        server_url = get_server_url_from_api_base(provider.resolved_api_base)
         return ConnectorRegistry(api_key=api_key, server_url=server_url)
 
     @requires_init

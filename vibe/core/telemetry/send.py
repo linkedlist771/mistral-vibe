@@ -94,7 +94,7 @@ class TelemetryClient:
         if provider_and_api_key is None:
             return
         provider, mistral_api_key = provider_and_api_key
-        telemetry_url = self._get_telemetry_url(provider.api_base)
+        telemetry_url = self._get_telemetry_url(provider.resolved_api_base)
         user_agent = get_user_agent(provider.backend)
         if (
             self._session_id_getter is not None

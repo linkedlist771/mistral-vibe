@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Sequence
 import json
-import os
 import types
 from typing import TYPE_CHECKING, Literal, NamedTuple, cast
 
@@ -184,11 +183,7 @@ class MistralBackend:
         self._client: Mistral | None = None
         self._provider = provider
         self._mapper = MistralMapper()
-        self._api_key = (
-            os.getenv(self._provider.api_key_env_var)
-            if self._provider.api_key_env_var
-            else None
-        )
+        self._api_key = self._provider.resolved_api_key
 
         reasoning_field = getattr(provider, "reasoning_field_name", "reasoning_content")
         if reasoning_field != "reasoning_content":
@@ -198,10 +193,11 @@ class MistralBackend:
             )
 
         # Mistral SDK takes server URL without api version as input
-        server_url = get_server_url_from_api_base(self._provider.api_base)
+        api_base = self._provider.resolved_api_base
+        server_url = get_server_url_from_api_base(api_base)
         if not server_url:
             raise ValueError(
-                f"Invalid API base URL: {self._provider.api_base}. "
+                f"Invalid API base URL: {api_base}. "
                 "Expected format: <server_url>/v<api_version>"
             )
         self._server_url = server_url

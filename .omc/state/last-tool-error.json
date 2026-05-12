@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"ANTHROPIC_BASE=\\\"https://api.spark-llm.com\\\" ANTHROPIC_API_KEY=\\\"local-router-key\\\" timeout 8 python vibe/cli/entrypoint.py\",\"timeout\":20000,\"description\":\"Verify interactive CLI startup n...",
+  "error": "Exit code 127\n(eval):1: command not found: timeout",
+  "timestamp": "2026-05-12T09:09:57.485Z",
+  "retry_count": 1
+}

@@ -55,7 +55,7 @@ dependencies = [
     "requests>=2.20.0",
     "rich>=14.0.0",
     "sounddevice>=0.5.1",
-    "textual>=8.2.1",
+    "textual==8.2.1",
     "textual-speedups>=0.2.1",
     "tomli-w>=1.2.0",
     "tree-sitter>=0.25.2",
@@ -88,11 +88,15 @@ vibe-acp = "vibe.acp.entrypoint:main"
 
 
 [tool.uv]
-exclude-newer = "7 days"
-exclude-newer-package = { agent-client-protocol = false, mistralai = false }
-
 package = true
 required-version = ">=0.8.0"
+
+[[tool.uv.index]]
+url = "https://pypi.org/simple"
+default = true
+
+[tool.uv.sources]
+mistralai = { url = "https://files.pythonhosted.org/packages/83/e0/9f246d18f8fe6e815f7cae88c437c986b342d3ff568607c8e0d53f4710d0/mistralai-2.3.2-py3-none-any.whl" }
 
 
 [dependency-groups]

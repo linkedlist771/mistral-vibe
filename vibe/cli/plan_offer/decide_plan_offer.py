@@ -88,7 +88,7 @@ def resolve_api_key_for_plan(provider: ProviderConfig) -> str | None:
     api_env_key = DEFAULT_MISTRAL_API_ENV_KEY
 
     if provider.backend == Backend.MISTRAL:
-        api_env_key = provider.api_key_env_var
+        api_env_key = provider.required_api_key_env_var
 
     return getenv(api_env_key)
 

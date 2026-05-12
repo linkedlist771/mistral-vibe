@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Sequence
 import json
-import os
 import types
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
@@ -237,11 +236,7 @@ class GenericBackend:
         extra_headers: dict[str, str] | None = None,
         metadata: dict[str, str] | None = None,
     ) -> LLMChunk:
-        api_key = (
-            os.getenv(self._provider.api_key_env_var)
-            if self._provider.api_key_env_var
-            else None
-        )
+        api_key = self._provider.resolved_api_key
 
         api_style = getattr(self._provider, "api_style", "openai")
         adapter = _get_adapter(api_style)
@@ -263,7 +258,7 @@ class GenericBackend:
         if extra_headers:
             headers.update(extra_headers)
 
-        base = req.base_url or self._provider.api_base
+        base = req.base_url or self._provider.resolved_api_base
         url = f"{base}{req.endpoint}"
 
         try:
@@ -305,11 +300,7 @@ class GenericBackend:
         extra_headers: dict[str, str] | None = None,
         metadata: dict[str, str] | None = None,
     ) -> AsyncGenerator[LLMChunk, None]:
-        api_key = (
-            os.getenv(self._provider.api_key_env_var)
-            if self._provider.api_key_env_var
-            else None
-        )
+        api_key = self._provider.resolved_api_key
 
         api_style = getattr(self._provider, "api_style", "openai")
         adapter = _get_adapter(api_style)
@@ -331,7 +322,7 @@ class GenericBackend:
         if extra_headers:
             headers.update(extra_headers)
 
-        base = req.base_url or self._provider.api_base
+        base = req.base_url or self._provider.resolved_api_base
         url = f"{base}{req.endpoint}"
 
         try:

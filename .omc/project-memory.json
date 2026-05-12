@@ -1,0 +1,334 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1778569484476,
+  "projectRoot": "/Users/dingli/Desktop/GitHubProjects/mistral-vibe",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Python",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "pyproject.toml"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "pytest",
+        "version": null,
+        "category": "testing"
+      }
+    ],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "pytest",
+    "lintCommand": "ruff check",
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "scripts",
+      "tests"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "__pycache__": {
+      "path": "__pycache__",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1778569484458,
+      "keyFiles": [
+        "vibe_mcp_tools.cpython-312.pyc"
+      ]
+    },
+    "claude_sdk": {
+      "path": "claude_sdk",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1778569484459,
+      "keyFiles": []
+    },
+    "distribution": {
+      "path": "distribution",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1778569484460,
+      "keyFiles": []
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 3,
+      "lastAccessed": 1778569484461,
+      "keyFiles": [
+        "README.md",
+        "acp-setup.md",
+        "proxy-setup.md"
+      ]
+    },
+    "pyinstaller": {
+      "path": "pyinstaller",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1778569484461,
+      "keyFiles": [
+        "runtime_hook_truststore.py"
+      ]
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 4,
+      "lastAccessed": 1778569484462,
+      "keyFiles": [
+        "README.md",
+        "bump_version.py",
+        "install.sh",
+        "prepare_release.py"
+      ]
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 24,
+      "lastAccessed": 1778569484462,
+      "keyFiles": [
+        "__init__.py",
+        "conftest.py",
+        "test_agent_auto_compact.py",
+        "test_agent_backend.py",
+        "test_agent_observer_streaming.py"
+      ]
+    },
+    "vibe": {
+      "path": "vibe",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1778569484463,
+      "keyFiles": [
+        "__init__.py",
+        "whats_new.md"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "uv.lock",
+      "accessCount": 20,
+      "lastAccessed": 1778571195899,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/config/_settings.py",
+      "accessCount": 16,
+      "lastAccessed": 1778576122915,
+      "type": "file"
+    },
+    {
+      "path": "pyproject.toml",
+      "accessCount": 16,
+      "lastAccessed": 1778576654980,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/llm/backend/generic.py",
+      "accessCount": 11,
+      "lastAccessed": 1778576257640,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/llm/backend/mistral.py",
+      "accessCount": 5,
+      "lastAccessed": 1778576257763,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/agent_loop.py",
+      "accessCount": 5,
+      "lastAccessed": 1778576395513,
+      "type": "file"
+    },
+    {
+      "path": "tests/backend/test_backend.py",
+      "accessCount": 4,
+      "lastAccessed": 1778575979658,
+      "type": "file"
+    },
+    {
+      "path": "tests/core/test_config_resolution.py",
+      "accessCount": 4,
+      "lastAccessed": 1778575979685,
+      "type": "file"
+    },
+    {
+      "path": "vibe/cli/textual_ui/app.py",
+      "accessCount": 4,
+      "lastAccessed": 1778576899964,
+      "type": "file"
+    },
+    {
+      "path": "vibe/setup/trusted_folders/trust_folder_dialog.py",
+      "accessCount": 4,
+      "lastAccessed": 1778576940875,
+      "type": "file"
+    },
+    {
+      "path": "vibe/setup/onboarding/__init__.py",
+      "accessCount": 4,
+      "lastAccessed": 1778576941018,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 3,
+      "lastAccessed": 1778569675133,
+      "type": "file"
+    },
+    {
+      "path": "vibe/cli/turn_summary/utils.py",
+      "accessCount": 3,
+      "lastAccessed": 1778576258046,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/llm/backend/factory.py",
+      "accessCount": 2,
+      "lastAccessed": 1778574364469,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/llm/backend/anthropic.py",
+      "accessCount": 2,
+      "lastAccessed": 1778574377186,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/config/schema.py",
+      "accessCount": 2,
+      "lastAccessed": 1778574412354,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/tools/builtins/websearch.py",
+      "accessCount": 2,
+      "lastAccessed": 1778574991103,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/telemetry/send.py",
+      "accessCount": 2,
+      "lastAccessed": 1778575052061,
+      "type": "file"
+    },
+    {
+      "path": "tests/core/test_config_load_dotenv.py",
+      "accessCount": 2,
+      "lastAccessed": 1778575083934,
+      "type": "file"
+    },
+    {
+      "path": "tests/backend/test_anthropic_adapter.py",
+      "accessCount": 2,
+      "lastAccessed": 1778575979737,
+      "type": "file"
+    },
+    {
+      "path": "vibe/cli/plan_offer/decide_plan_offer.py",
+      "accessCount": 2,
+      "lastAccessed": 1778576280659,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/types.py",
+      "accessCount": 1,
+      "lastAccessed": 1778569658298,
+      "type": "file"
+    },
+    {
+      "path": "tests/test_agent_backend.py",
+      "accessCount": 1,
+      "lastAccessed": 1778569694757,
+      "type": "file"
+    },
+    {
+      "path": "AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1778569738896,
+      "type": "file"
+    },
+    {
+      "path": "vibe/cli/entrypoint.py",
+      "accessCount": 1,
+      "lastAccessed": 1778574491995,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/config/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1778574492047,
+      "type": "file"
+    },
+    {
+      "path": "vibe/cli/cli.py",
+      "accessCount": 1,
+      "lastAccessed": 1778574506657,
+      "type": "file"
+    },
+    {
+      "path": "vibe/acp/acp_agent_loop.py",
+      "accessCount": 1,
+      "lastAccessed": 1778574506666,
+      "type": "file"
+    },
+    {
+      "path": "vibe/acp/entrypoint.py",
+      "accessCount": 1,
+      "lastAccessed": 1778574506714,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/llm/backend/base.py",
+      "accessCount": 1,
+      "lastAccessed": 1778574531111,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/transcribe/mistral_transcribe_client.py",
+      "accessCount": 1,
+      "lastAccessed": 1778574803258,
+      "type": "file"
+    },
+    {
+      "path": "vibe/core/llm/exceptions.py",
+      "accessCount": 1,
+      "lastAccessed": 1778575615759,
+      "type": "file"
+    },
+    {
+      "path": "vibe/cli/textual_ui/ansi_markdown.py",
+      "accessCount": 1,
+      "lastAccessed": 1778576535998,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

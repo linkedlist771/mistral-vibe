@@ -45,9 +45,9 @@ def load_dotenv_values(
 
     env_vars = dotenv_values(env_path)
     for key, value in env_vars.items():
-        if not value:
+        if not value or key in environ:
             continue
-        environ.update({key: value})
+        environ[key] = value
 
 
 class MissingAPIKeyError(RuntimeError):
@@ -147,6 +147,8 @@ class SessionLoggingConfig(BaseSettings):
 
 
 DEFAULT_MISTRAL_API_ENV_KEY = "MISTRAL_API_KEY"
+ANTHROPIC_API_ENV_KEY = "ANTHROPIC_API_KEY"
+ANTHROPIC_API_BASE_ENV_KEYS = ("ANTHROPIC_BASE", "ANTHROPIC_BASE_URL", "ANTHROPIC_API_BASE")
 DEFAULT_MISTRAL_BROWSER_AUTH_BASE_URL = "https://console.mistral.ai"
 DEFAULT_MISTRAL_BROWSER_AUTH_API_BASE_URL = "https://console.mistral.ai/api"
 
@@ -155,6 +157,7 @@ class ProviderConfig(BaseModel):
     name: str
     api_base: str
     api_key_env_var: str = ""
+    api_base_env_var: str = ""
     browser_auth_base_url: str | None = None
     browser_auth_api_base_url: str | None = None
     api_style: str = "openai"
@@ -186,6 +189,31 @@ class ProviderConfig(BaseModel):
         if self.browser_auth_api_base_url is None:
             self.browser_auth_api_base_url = DEFAULT_MISTRAL_BROWSER_AUTH_API_BASE_URL
         return self
+
+    @property
+    def resolved_api_base(self) -> str:
+        if self.name == "anthropic":
+            for env_key in ANTHROPIC_API_BASE_ENV_KEYS:
+                if api_base := os.getenv(env_key):
+                    return api_base
+            return self.api_base
+        if self.api_base_env_var and (api_base := os.getenv(self.api_base_env_var)):
+            return api_base
+        return self.api_base
+
+    @property
+    def resolved_api_key(self) -> str | None:
+        if self.name == "anthropic":
+            return os.getenv(ANTHROPIC_API_ENV_KEY)
+        if not self.api_key_env_var:
+            return None
+        return os.getenv(self.api_key_env_var)
+
+    @property
+    def required_api_key_env_var(self) -> str:
+        if self.name == "anthropic":
+            return ANTHROPIC_API_ENV_KEY
+        return self.api_key_env_var
 
     @property
     def supports_browser_sign_in(self) -> bool:
@@ -612,7 +640,7 @@ class VibeConfig(BaseSettings):
         provider = self.get_mistral_provider()
 
         if provider is not None:
-            server_url = get_server_url_from_api_base(provider.api_base)
+            server_url = get_server_url_from_api_base(provider.resolved_api_base)
             api_key_env = provider.api_key_env_var or DEFAULT_MISTRAL_API_ENV_KEY
         else:
             server_url = None
@@ -775,8 +803,8 @@ class VibeConfig(BaseSettings):
         try:
             active_model = self.get_active_model()
             provider = self.get_provider_for_model(active_model)
-            api_key_env = provider.api_key_env_var
-            if api_key_env and not os.getenv(api_key_env):
+            api_key_env = provider.required_api_key_env_var
+            if api_key_env and not provider.resolved_api_key:
                 raise MissingAPIKeyError(api_key_env, provider.name)
         except ValueError:
             pass

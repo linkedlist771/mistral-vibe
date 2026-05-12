@@ -47,6 +47,49 @@ from vibe.core.utils import get_user_agent
 
 
 class TestBackend:
+    @pytest.mark.asyncio
+    async def test_generic_backend_uses_resolved_provider_api_base(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        base_url = "https://api.spark-llm.com"
+        monkeypatch.setenv("ANTHROPIC_API_BASE", base_url)
+        with respx.mock(base_url=base_url) as mock_api:
+            route = mock_api.post("/v1/messages").mock(
+                return_value=httpx.Response(
+                    status_code=200,
+                    json={
+                        "content": [{"type": "text", "text": "hi"}],
+                        "usage": {"input_tokens": 1, "output_tokens": 1},
+                    },
+                )
+            )
+            provider = ProviderConfig(
+                name="anthropic",
+                api_base="https://api.anthropic.com",
+                api_key_env_var="ANTHROPIC_API_KEY",
+                api_base_env_var="ANTHROPIC_API_BASE",
+                api_style="anthropic",
+            )
+            backend = GenericBackend(provider=provider)
+            model = ModelConfig(
+                name="claude-sonnet-4-5-20250929",
+                provider="anthropic",
+                alias="claude-sonnet-4-5",
+            )
+
+            result = await backend.complete(
+                model=model,
+                messages=[LLMMessage(role=Role.user, content="Say hi")],
+                temperature=0.2,
+                tools=None,
+                max_tokens=None,
+                tool_choice=None,
+                extra_headers=None,
+            )
+
+        assert route.called
+        assert result.message.content == "hi"
+
     @staticmethod
     def _build_fast_retry_config() -> RetryConfig:
         return RetryConfig(

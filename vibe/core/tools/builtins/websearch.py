@@ -99,7 +99,7 @@ class WebSearch(
             return None
         for provider in ctx.agent_manager.config.providers:
             if provider.backend == Backend.MISTRAL:
-                return get_server_url_from_api_base(provider.api_base)
+                return get_server_url_from_api_base(provider.resolved_api_base)
         return None
 
     def _parse_response(self, response: ConversationResponse) -> WebSearchResult:

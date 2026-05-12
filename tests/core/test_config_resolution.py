@@ -290,6 +290,29 @@ class TestAutoCompactThresholdFallback:
 
 
 class TestDefaultProviderConfig:
+    def test_provider_resolves_api_base_from_configured_env_var(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        provider = ProviderConfig(
+            name="anthropic",
+            api_base="https://api.anthropic.com",
+            api_base_env_var="ANTHROPIC_API_BASE",
+        )
+        monkeypatch.setenv("ANTHROPIC_API_BASE", "https://api.spark-llm.com")
+
+        assert provider.resolved_api_base == "https://api.spark-llm.com"
+
+    def test_anthropic_provider_resolves_api_base_from_base_url_alias(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        provider = ProviderConfig(
+            name="anthropic",
+            api_base="https://api.anthropic.com",
+        )
+        monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://api.spark-llm.com")
+
+        assert provider.resolved_api_base == "https://api.spark-llm.com"
+
     def test_default_mistral_provider_is_mistral_backend(self) -> None:
         provider = _default_provider("mistral")
 
