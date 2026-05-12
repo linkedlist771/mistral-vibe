@@ -63,7 +63,7 @@ def load_dotenv_values(
 
     env_vars = dotenv_values(env_path)
     for key, value in env_vars.items():
-        if not value:
+        if not value or key in environ:
             continue
         environ.update({key: value})
 

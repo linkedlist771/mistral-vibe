@@ -20,7 +20,7 @@ def test_skips_missing_file(tmp_path: Path) -> None:
     assert environ == {"EXISTING": "1"}
 
 
-def test_sets_and_overrides_values(tmp_path: Path) -> None:
+def test_sets_values_without_overriding_existing_environment(tmp_path: Path) -> None:
     env_path = tmp_path / ".env"
     _write_env_file(
         env_path,
@@ -42,11 +42,11 @@ def test_sets_and_overrides_values(tmp_path: Path) -> None:
 
     load_dotenv_values(env_path=env_path, environ=environ)
 
-    assert environ["MISTRAL_API_KEY"] == "new-key"
-    assert environ["HTTPS_PROXY"] == "https://local-proxy:8080"
-    assert environ["OTHER"] == "from-env"
+    assert environ["MISTRAL_API_KEY"] == "old-key"
+    assert environ["HTTPS_PROXY"] == "old-https"
+    assert environ["OTHER"] == "keep"
     assert environ["NEW_KEY"] == "added"
-    assert environ["FOO"] == "replace"
+    assert environ["FOO"] == "keep"
 
 
 def test_ignores_empty_values(tmp_path: Path) -> None:
