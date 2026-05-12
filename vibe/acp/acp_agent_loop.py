@@ -110,6 +110,7 @@ from vibe.acp.utils import (
 from vibe.core.agent_loop import AgentLoop
 from vibe.core.agents.models import CHAT as CHAT_AGENT, BuiltinAgentName
 from vibe.core.autocompletion.path_prompt_adapter import render_path_prompt
+from vibe.core.llm.images import extract_image_attachments
 from vibe.core.config import (
     MissingAPIKeyError,
     SessionLoggingConfig,
@@ -928,10 +929,19 @@ class VibeAcpAgentLoop(AcpAgent):
     async def _run_agent_loop(
         self, session: AcpSessionLoop, prompt: str, client_message_id: str | None = None
     ) -> AsyncGenerator[SessionUpdate | UsageUpdate]:
+        # Peel off `@<image>` tokens before path-prompt rendering so they
+        # flow as multimodal attachments instead of plain resource_link text.
+        prompt, image_attachments = extract_image_attachments(
+            prompt, base_dir=Path.cwd()
+        )
         rendered_prompt = render_path_prompt(prompt, base_dir=Path.cwd())
 
         async with aclosing(
-            session.agent_loop.act(rendered_prompt, client_message_id=client_message_id)
+            session.agent_loop.act(
+                rendered_prompt,
+                client_message_id=client_message_id,
+                attachments=image_attachments or None,
+            )
         ) as events:
             async for event in events:
                 if isinstance(event, AssistantEvent):

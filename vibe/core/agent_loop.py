@@ -27,6 +27,8 @@ from vibe.core.hooks.manager import HooksManager
 from vibe.core.hooks.models import HookConfigResult, HookType, HookUserMessage
 from vibe.core.llm.backend.factory import BACKEND_FACTORY
 from vibe.core.llm.exceptions import BackendError
+from vibe.core.llm.images import extract_image_attachments
+from vibe.core.logger import logger
 from vibe.core.llm.format import (
     APIToolFormatHandler,
     FailedToolCall,
@@ -572,7 +574,10 @@ class AgentLoop:
 
     @requires_init
     async def act(
-        self, msg: str, client_message_id: str | None = None
+        self,
+        msg: str,
+        client_message_id: str | None = None,
+        attachments: list[dict[str, Any]] | None = None,
     ) -> AsyncGenerator[BaseEvent, None]:
         self._clean_message_history()
         self.rewind_manager.create_checkpoint()
@@ -582,7 +587,9 @@ class AgentLoop:
             model_name = None
         async with agent_span(model=model_name, session_id=self.session_id):
             async for event in self._conversation_loop(
-                msg, client_message_id=client_message_id
+                msg,
+                client_message_id=client_message_id,
+                attachments=attachments,
             ):
                 yield event
 
@@ -791,10 +798,30 @@ class AgentLoop:
         return headers
 
     async def _conversation_loop(
-        self, user_msg: str, client_message_id: str | None = None
+        self,
+        user_msg: str,
+        *,
+        client_message_id: str | None = None,
+        attachments: list[dict[str, Any]] | None = None,
     ) -> AsyncGenerator[BaseEvent]:
+        # Callers (TUI/ACP) extract images before path-prompt rendering and
+        # pass them in explicitly. Fall back to in-line ``@<path>`` regex
+        # parsing for programmatic/scripted callers that didn't pre-process.
+        if attachments is None:
+            user_msg, image_blocks = extract_image_attachments(user_msg)
+            if image_blocks:
+                attachments = image_blocks
+        if attachments:
+            logger.warning(
+                "Attached %d image block(s) from user message (total b64 bytes=%d)",
+                len(attachments),
+                sum(len(b["source"]["data"]) for b in attachments),
+            )
         user_message = LLMMessage(
-            role=Role.user, content=user_msg, message_id=client_message_id
+            role=Role.user,
+            content=user_msg,
+            message_id=client_message_id,
+            attachments=attachments,
         )
         self.messages.append(user_message)
         self.stats.steps += 1

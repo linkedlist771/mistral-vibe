@@ -226,6 +226,10 @@ class LLMMessage(BaseModel):
     name: str | None = None
     tool_call_id: str | None = None
     message_id: str | None = None
+    # Multimodal attachments emitted as provider-native content blocks
+    # (e.g. Anthropic image blocks). Backends that don't support multimodal
+    # input ignore this field.
+    attachments: list[dict[str, Any]] | None = None
 
     @model_validator(mode="before")
     @classmethod
