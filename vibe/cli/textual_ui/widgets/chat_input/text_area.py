@@ -10,6 +10,7 @@ from textual.widgets import TextArea
 from vibe.cli.autocompletion.base import CompletionResult
 from vibe.cli.commands import CommandRegistry
 from vibe.cli.textual_ui.external_editor import ExternalEditor
+from vibe.core.llm.images import find_at_token_start, grab_clipboard_image
 from vibe.cli.textual_ui.widgets.chat_input.completion_manager import (
     MultiCompletionManager,
 )
@@ -102,6 +103,54 @@ class ChatTextArea(TextArea):
         if result is not None:
             self.clear()
             self.insert(result)
+
+    def _try_attach_clipboard_image(self) -> bool:
+        """If the OS clipboard contains an image, save it and insert an
+        ``@<path>`` token into the textarea. Returns True if an image was
+        attached (caller should stop further paste handling).
+        """
+        path = grab_clipboard_image()
+        if path is None:
+            return False
+        self.insert(f"@{path} ")
+        return True
+
+    async def _on_paste(self, event: events.Paste) -> None:
+        # Bracketed paste fires whether the terminal forwarded text or not.
+        # If the clipboard currently holds an image, prefer that — terminals
+        # usually deliver an empty/short string in that case anyway.
+        if not event.text.strip() and self._try_attach_clipboard_image():
+            event.stop()
+            return
+        await super()._on_paste(event)
+
+    def action_paste(self) -> None:
+        # Explicit ctrl+v: always check the clipboard for an image first.
+        if self._try_attach_clipboard_image():
+            return
+        super().action_paste()
+
+    def action_delete_left(self) -> None:
+        # Backspace at the end of an ``@<path>`` token deletes the whole
+        # token in one shot. Pasted-image tokens are otherwise tedious to
+        # remove character-by-character.
+        if self.read_only or not self.selection.is_empty:
+            super().action_delete_left()
+            return
+        row, col = self.selection.end
+        if col == 0:
+            super().action_delete_left()
+            return
+        try:
+            line_text = self.document.get_line(row)
+        except IndexError:
+            super().action_delete_left()
+            return
+        start = find_at_token_start(line_text[:col])
+        if start is None:
+            super().action_delete_left()
+            return
+        self._delete_via_keyboard((row, start), (row, col))
 
     def on_text_area_changed(self, event: TextArea.Changed) -> None:
         if not self._navigating_history and self.text != self._last_text:

@@ -125,6 +125,7 @@ from vibe.core.audio_player.audio_player import AudioPlayer
 from vibe.core.audio_recorder import AudioRecorder
 from vibe.core.autocompletion.path_prompt import build_path_prompt_payload
 from vibe.core.autocompletion.path_prompt_adapter import render_path_prompt
+from vibe.core.llm.images import extract_image_attachments
 from vibe.core.config import VibeConfig
 from vibe.core.data_retention import DATA_RETENTION_MESSAGE
 from vibe.core.hooks.models import HookStartEvent
@@ -1332,6 +1333,14 @@ class VibeApp(App):  # noqa: PLR0904
             await self._handle_agent_loop_init()
             await self._ensure_loading_widget()
             message_id = str(uuid4())
+            # Peel off any `@<image_path>` tokens BEFORE the path-prompt
+            # pipeline sees them — otherwise the image gets rendered as a
+            # plain ``resource_link`` text block instead of being attached
+            # as a multimodal content block. The image-stripped text then
+            # flows through the normal text/file-mention rendering.
+            prompt, image_attachments = extract_image_attachments(
+                prompt, base_dir=Path.cwd()
+            )
             prompt_payload = build_path_prompt_payload(prompt, base_dir=Path.cwd())
             if prompt_payload.all_resources:
                 context_types: dict[str, int] = {}
@@ -1353,7 +1362,11 @@ class VibeApp(App):  # noqa: PLR0904
             self._narrator_manager.cancel()
             self._narrator_manager.on_turn_start(rendered_prompt)
             async with aclosing(
-                self.agent_loop.act(rendered_prompt, client_message_id=message_id)
+                self.agent_loop.act(
+                    rendered_prompt,
+                    client_message_id=message_id,
+                    attachments=image_attachments or None,
+                )
             ) as events:
                 await self._handle_agent_loop_events(events)
         except asyncio.CancelledError:

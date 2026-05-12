@@ -34,6 +34,8 @@ class AnthropicMapper:
                     system_prompt = msg.content or ""
                 case Role.user:
                     user_content: list[dict[str, Any]] = []
+                    if msg.attachments:
+                        user_content.extend(msg.attachments)
                     if msg.content:
                         user_content.append({"type": "text", "text": msg.content})
                     converted.append({"role": "user", "content": user_content or ""})
