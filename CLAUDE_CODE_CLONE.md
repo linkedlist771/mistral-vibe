@@ -24,7 +24,26 @@ export ANTHROPIC_API_KEY="<your-key>"
 
 # 程序化（一次性 prompt，自动审批）
 .venv/bin/python -m vibe.cli.entrypoint -p "say hi" --trust
+
+# Claude Code 风格的常用组合（推荐）
+.venv/bin/python -m vibe.cli.entrypoint --dangerously-skip-permissions --print "say hi"
 ```
+
+### Claude Code 风格的 CLI 参数
+
+为了让从 Claude Code 切换过来的用户无感，新增以下别名 / 参数（详见 `vibe --help`）：
+
+| Claude Code 参数 | Vibe 实现 |
+|---|---|
+| `--dangerously-skip-permissions` | 等价 `--agent auto-approve`；同时隐式 `--trust` 当前目录 |
+| `--print` / `-p` | 程序化模式（保留原 `--prompt` 写法） |
+| `--permission-mode <mode>` | `default → default`、`plan → plan`、`acceptEdits → accept-edits`、`bypassPermissions/auto → auto-approve` |
+| `--allowed-tools` / `--allowedTools` | 别名映射到 `--enabled-tools` |
+| `--disallowed-tools` / `--disallowedTools` | 新增；以 JSON list 写入 `VIBE_DISABLED_TOOLS` |
+| `--model <alias>` | 新增；等价 `VIBE_ACTIVE_MODEL=<alias>` |
+| `--add-dir <dir>` | 新增；可指定多次，把额外目录加入本次会话的 trusted 列表 |
+| `--system-prompt <text>` / `--append-system-prompt <text>` | 新增 |
+| `--output-format <text\|json\|stream-json>` | 别名映射到 `--output`（`stream-json` 归一化成 `streaming`） |
 
 `.vibe/config.toml`（项目级）选择模型与 provider：
 
@@ -120,6 +139,28 @@ provider = "anthropic_router"
 - `commit` — 提交流程
 - `pr` — Pull Request 流程
 - `vibe` — Vibe 自我感知（保留）
+
+### 2.6 多模态图像输入（`vibe/core/llm/images.py`）
+
+对齐 Claude Code 的 `imagePaste.ts` / `imageResizer.ts` / `imageStore.ts`：
+
+- **`@/abs/path.png` / `@./pic.jpg` 引用** — 输入文本里出现这种 token 时自动剥离，加载、缩放（>2000px 边长降采样、确保 base64 不超过 5MB），编码为 Anthropic image content block (`{"type":"image","source":{"type":"base64",...}}`)。
+- **剪贴板粘贴** — `Ctrl+V` 钩子：
+  - macOS：`osascript` 读 `«class PNGf»`
+  - Linux：`wl-paste -t image/png` (Wayland) 或 `xclip -selection clipboard -t image/png -o` (X11)
+  - Windows：`PIL.ImageGrab.grabclipboard()`
+  - 拿到图像后写到 `~/.vibe/image-cache/<uuid>.png` 并在输入框插入 `@<path> ` token
+- **Backspace 智能删除** — 光标后退到 `@<path>` token 末尾时，一次删除整个 token 而不是逐字符
+- **后端透传** — `LLMMessage.attachments: list[dict] | None`，`AnthropicMapper` 把 attachments 拼到 user content 列表前
+- **支持的扩展名** — png / jpg / jpeg / gif / webp，JPEG 有 alpha 时自动 flatten 到白底
+
+使用例：
+
+```bash
+export ANTHROPIC_API_KEY="<your-key>"
+.venv/bin/python -m vibe.cli.entrypoint -p "What text is in @/tmp/screenshot.png?" --trust
+# → 模型 OCR 出图片里的文字
+```
 
 ---
 

@@ -168,18 +168,8 @@ def _clipboard_image_cache_dir() -> Path:
     return base
 
 
-def grab_clipboard_image() -> Path | None:
-    """If the OS clipboard currently holds an image, write it to disk and
-    return the saved path. Returns ``None`` if there is no image or the
-    platform is unsupported.
-
-    macOS uses ``osascript`` (``«class PNGf»``), mirroring claude-code's
-    ``src/utils/imagePaste.ts`` fallback path. Linux / Windows support is
-    a TODO — they return ``None`` for now.
-    """
-    if sys.platform != "darwin":
-        return None
-
+def _grab_clipboard_image_macos() -> Path | None:
+    """macOS: use AppleScript to dump «class PNGf» onto disk."""
     out_path = _clipboard_image_cache_dir() / f"{uuid.uuid4().hex}.png"
     script = (
         "set png_data to (the clipboard as «class PNGf»)\n"
@@ -198,11 +188,94 @@ def grab_clipboard_image() -> Path | None:
         log.debug("osascript clipboard read failed: %s", e)
         return None
     if result.returncode != 0 or not out_path.is_file() or out_path.stat().st_size == 0:
-        # No image on clipboard (or AppleScript refused — both surface as
-        # non-zero exit). Clean up any zero-byte file osascript created.
         out_path.unlink(missing_ok=True)
         return None
     return out_path
+
+
+def _grab_clipboard_image_linux() -> Path | None:
+    """Linux: try wl-paste (Wayland) then xclip (X11). Both have to be
+    installed by the user; if neither is present we silently return None.
+    """
+    import os
+    import shutil
+
+    out_path = _clipboard_image_cache_dir() / f"{uuid.uuid4().hex}.png"
+
+    candidates: list[tuple[str, list[str]]] = []
+    # Wayland — wl-paste -t image/png writes binary PNG to stdout.
+    if os.environ.get("WAYLAND_DISPLAY") and shutil.which("wl-paste"):
+        candidates.append(("wl-paste", ["wl-paste", "-t", "image/png"]))
+    # X11 — xclip -selection clipboard -t image/png -o
+    if os.environ.get("DISPLAY") and shutil.which("xclip"):
+        candidates.append(
+            ("xclip", ["xclip", "-selection", "clipboard", "-t", "image/png", "-o"])
+        )
+
+    for name, cmd in candidates:
+        try:
+            result = subprocess.run(
+                cmd, capture_output=True, timeout=5, check=False
+            )
+        except (FileNotFoundError, subprocess.TimeoutExpired) as e:
+            log.debug("%s clipboard read failed: %s", name, e)
+            continue
+        if result.returncode != 0 or not result.stdout:
+            continue
+        try:
+            out_path.write_bytes(result.stdout)
+        except OSError as e:
+            log.debug("Failed to write clipboard image to %s: %s", out_path, e)
+            continue
+        # Round-trip via PIL to confirm it's a real image and to strip any
+        # leading garbage some clipboard managers attach.
+        try:
+            with Image.open(out_path) as img:
+                img.verify()
+        except (UnidentifiedImageError, OSError):
+            out_path.unlink(missing_ok=True)
+            continue
+        return out_path
+
+    return None
+
+
+def _grab_clipboard_image_windows() -> Path | None:
+    """Windows: use Pillow's ImageGrab to read clipboard."""
+    try:
+        from PIL import ImageGrab
+    except ImportError:
+        return None
+    try:
+        img = ImageGrab.grabclipboard()
+    except (OSError, NotImplementedError):
+        return None
+    if not isinstance(img, Image.Image):
+        return None
+    out_path = _clipboard_image_cache_dir() / f"{uuid.uuid4().hex}.png"
+    try:
+        img.save(out_path, format="PNG")
+    except OSError as e:
+        log.debug("Failed to write clipboard image to %s: %s", out_path, e)
+        return None
+    return out_path
+
+
+def grab_clipboard_image() -> Path | None:
+    """If the OS clipboard currently holds an image, write it to disk and
+    return the saved path. Returns ``None`` if there is no image or the
+    platform's clipboard tool isn't available.
+
+    macOS uses ``osascript`` (``«class PNGf»``), Linux uses ``wl-paste``
+    (Wayland) or ``xclip`` (X11), Windows uses ``PIL.ImageGrab``.
+    """
+    if sys.platform == "darwin":
+        return _grab_clipboard_image_macos()
+    if sys.platform.startswith("linux"):
+        return _grab_clipboard_image_linux()
+    if sys.platform == "win32":
+        return _grab_clipboard_image_windows()
+    return None
 
 
 def extract_image_attachments(

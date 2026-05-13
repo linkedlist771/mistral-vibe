@@ -41,11 +41,12 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "-p",
         "--prompt",
+        "--print",
         nargs="?",
         const="",
         metavar="TEXT",
         help="Run in programmatic mode: send prompt, auto-approve all tools, "
-        "output response, and exit.",
+        "output response, and exit. (--print is an alias for Claude Code parity.)",
     )
     parser.add_argument(
         "--max-turns",
@@ -63,21 +64,35 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "--enabled-tools",
+        "--allowed-tools",
+        "--allowedTools",
         action="append",
         metavar="TOOL",
+        dest="enabled_tools",
         help="Enable specific tools. In programmatic mode (-p), this disables "
         "all other tools. "
         "Can use exact names, glob patterns (e.g., 'bash*'), or "
-        "regex with 're:' prefix. Can be specified multiple times.",
+        "regex with 're:' prefix. Can be specified multiple times. "
+        "(--allowed-tools / --allowedTools are aliases for Claude Code parity.)",
+    )
+    parser.add_argument(
+        "--disallowed-tools",
+        "--disallowedTools",
+        action="append",
+        metavar="TOOL",
+        dest="disallowed_tools",
+        help="Disable specific tools. Same matching rules as --allowed-tools.",
     )
     parser.add_argument(
         "--output",
+        "--output-format",
         type=str,
-        choices=["text", "json", "streaming"],
+        choices=["text", "json", "streaming", "stream-json"],
         default="text",
+        dest="output",
         help="Output format for programmatic mode (-p): 'text' "
         "for human-readable (default), 'json' for all messages at end, "
-        "'streaming' for newline-delimited JSON per message.",
+        "'streaming' / 'stream-json' for newline-delimited JSON per message.",
     )
     parser.add_argument(
         "--agent",
@@ -88,6 +103,57 @@ def parse_arguments() -> argparse.Namespace:
         "defaults to the 'default_agent' config setting. In programmatic "
         "mode (-p/--prompt), defaults to auto-approve and 'default_agent' "
         "is ignored.",
+    )
+    parser.add_argument(
+        "--permission-mode",
+        choices=["default", "plan", "acceptEdits", "bypassPermissions", "auto"],
+        default=None,
+        dest="permission_mode",
+        help="Claude Code-compatible permission mode. Mapped to vibe agents: "
+        "default→default, plan→plan, acceptEdits→accept-edits, "
+        "bypassPermissions/auto→auto-approve. Equivalent to using --agent "
+        "with the corresponding name.",
+    )
+    parser.add_argument(
+        "--dangerously-skip-permissions",
+        action="store_true",
+        dest="dangerously_skip_permissions",
+        help="Bypass ALL tool permission checks. Equivalent to "
+        "`--agent auto-approve`. Use only in trusted environments (Docker, "
+        "sandbox, throwaway VMs); the agent can run arbitrary shell commands "
+        "and edit any file without confirmation.",
+    )
+    parser.add_argument(
+        "--model",
+        metavar="ALIAS",
+        default=None,
+        help="Override the active model for this run (e.g. 'gpt-5.5(xhigh)'). "
+        "Equivalent to VIBE_ACTIVE_MODEL=<alias>. Must match a [[models]] "
+        "alias from .vibe/config.toml.",
+    )
+    parser.add_argument(
+        "--add-dir",
+        action="append",
+        metavar="DIR",
+        dest="add_dir",
+        default=[],
+        help="Trust an additional directory for this run. Can be specified "
+        "multiple times. Useful when working on code spread across sibling "
+        "repos.",
+    )
+    parser.add_argument(
+        "--system-prompt",
+        metavar="TEXT",
+        default=None,
+        dest="system_prompt",
+        help="Override the default system prompt for this run.",
+    )
+    parser.add_argument(
+        "--append-system-prompt",
+        metavar="TEXT",
+        default=None,
+        dest="append_system_prompt",
+        help="Append text to the default system prompt for this run.",
     )
     parser.add_argument("--setup", action="store_true", help="Setup API key and exit")
     parser.add_argument(
@@ -154,8 +220,59 @@ def check_and_resolve_trusted_folder(cwd: Path) -> None:
         trusted_folders_manager.add_untrusted(cwd)
 
 
+_PERMISSION_MODE_TO_AGENT: dict[str, str] = {
+    "default": "default",
+    "plan": "plan",
+    "acceptEdits": "accept-edits",
+    "bypassPermissions": "auto-approve",
+    "auto": "auto-approve",
+}
+
+
+def _resolve_claude_code_flag_aliases(args: argparse.Namespace) -> None:
+    """Normalize Claude Code-style CLI flags onto Vibe's internal fields.
+
+    Precedence (highest wins): explicit ``--agent`` > ``--dangerously-skip-permissions``
+    > ``--permission-mode``. ``--model`` becomes ``VIBE_ACTIVE_MODEL`` so it
+    flows through the pydantic settings layer. ``--add-dir`` trusts each
+    listed directory for this session.
+    """
+    if args.dangerously_skip_permissions:
+        if args.agent and args.agent != "auto-approve":
+            rprint(
+                f"[yellow]--dangerously-skip-permissions overrides "
+                f"--agent {args.agent} → auto-approve[/]"
+            )
+        args.agent = "auto-approve"
+
+    if args.permission_mode and not args.agent:
+        args.agent = _PERMISSION_MODE_TO_AGENT[args.permission_mode]
+
+    if args.model:
+        os.environ["VIBE_ACTIVE_MODEL"] = args.model
+
+    if args.system_prompt:
+        os.environ["VIBE_SYSTEM_PROMPT"] = args.system_prompt
+    if args.append_system_prompt:
+        os.environ["VIBE_APPEND_SYSTEM_PROMPT"] = args.append_system_prompt
+
+    if args.disallowed_tools:
+        # pydantic-settings parses VIBE_DISABLED_TOOLS as a JSON array, not
+        # a CSV. Use the JSON form so passing a single tool still works.
+        import json
+
+        os.environ.setdefault(
+            "VIBE_DISABLED_TOOLS", json.dumps(args.disallowed_tools)
+        )
+
+    # Map streaming aliases to vibe's existing name.
+    if getattr(args, "output", None) == "stream-json":
+        args.output = "streaming"
+
+
 def main() -> None:
     args = parse_arguments()
+    _resolve_claude_code_flag_aliases(args)
 
     if args.workdir:
         workdir = args.workdir.expanduser().resolve()
@@ -177,8 +294,17 @@ def main() -> None:
         )
         sys.exit(1)
 
-    if args.trust:
+    if args.trust or args.dangerously_skip_permissions:
+        # --dangerously-skip-permissions implies trust: the user has already
+        # accepted that this session bypasses safety gates.
         trusted_folders_manager.trust_for_session(cwd)
+
+    for extra_dir in args.add_dir:
+        d = Path(extra_dir).expanduser().resolve()
+        if not d.is_dir():
+            rprint(f"[yellow]--add-dir: skipping non-directory {d}[/]")
+            continue
+        trusted_folders_manager.trust_for_session(d)
 
     is_interactive = args.prompt is None
     if is_interactive:

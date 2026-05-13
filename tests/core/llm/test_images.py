@@ -204,3 +204,26 @@ def test_find_at_token_start_empty() -> None:
 
 def test_find_at_token_start_no_at() -> None:
     assert find_at_token_start("just regular text") is None
+
+
+def test_grab_clipboard_image_no_op_when_unsupported(monkeypatch) -> None:
+    """Without an X11/Wayland session and without xclip/wl-paste installed,
+    the Linux helper should return ``None`` without raising."""
+    import sys
+
+    from vibe.core.llm import images as imgs
+
+    monkeypatch.setattr(sys, "platform", "linux")
+    # Strip the env vars the helper looks at.
+    monkeypatch.delenv("DISPLAY", raising=False)
+    monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
+    assert imgs.grab_clipboard_image() is None
+
+
+def test_grab_clipboard_image_returns_none_on_unknown_platform(monkeypatch) -> None:
+    import sys
+
+    from vibe.core.llm import images as imgs
+
+    monkeypatch.setattr(sys, "platform", "freebsd14")
+    assert imgs.grab_clipboard_image() is None
