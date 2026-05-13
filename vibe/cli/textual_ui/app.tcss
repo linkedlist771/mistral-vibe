@@ -1,4 +1,17 @@
-$mistral_orange: #FF8205;
+/* Claude Code theme colors — sourced from claude-code/src/utils/theme.ts. */
+$mistral_orange: rgb(215,119,87);       /* legacy alias kept for backwards compat */
+$claude_brand: rgb(215,119,87);          /* "claude" — main brand orange  */
+$claude_shimmer: rgb(245,149,117);       /* "claudeShimmer"  */
+$claude_permission: rgb(87,105,247);     /* "permission" blue  */
+$claude_suggestion: rgb(87,105,247);     /* autocomplete highlight  */
+$claude_success: rgb(78,186,101);
+$claude_error: rgb(255,107,128);
+$claude_warning: rgb(255,193,7);
+$claude_subtle: rgb(102,102,102);
+$claude_diff_added_bg: rgb(34,92,43);
+$claude_diff_removed_bg: rgb(122,41,54);
+$claude_diff_added_word: rgb(56,166,96);
+$claude_diff_removed_word: rgb(179,89,107);
 
 * {
     scrollbar-color: ansi_black;
@@ -102,6 +115,8 @@ TextArea > .text-area--cursor {
     width: 1fr;
 }
 
+/* Input box border — Claude Code uses promptBorder gray by default and tints
+ * it amber/red/green for safety modes. */
 #input-box {
     height: auto;
     width: 100%;
@@ -112,28 +127,28 @@ TextArea > .text-area--cursor {
     padding: 0 1;
 
     &.border-warning {
-        border: solid ansi_yellow;
-        border-title-color: ansi_yellow;
+        border: solid $claude_warning;
+        border-title-color: $claude_warning;
     }
 
     &.border-safe {
-        border: solid ansi_green;
-        border-title-color: ansi_green;
+        border: solid $claude_success;
+        border-title-color: $claude_success;
     }
 
     &.border-error {
-        border: solid ansi_red;
-        border-title-color: ansi_red;
+        border: solid $claude_error;
+        border-title-color: $claude_error;
     }
 
     &.border-recording {
-        border: solid $mistral_orange;
-        border-title-color: $mistral_orange;
+        border: solid $claude_brand;
+        border-title-color: $claude_brand;
     }
 
     &.border-remote {
-        border: solid $mistral_orange;
-        border-title-color: $mistral_orange;
+        border: solid $claude_brand;
+        border-title-color: $claude_brand;
     }
 }
 
@@ -234,13 +249,15 @@ Markdown {
     text-style: bold;
 }
 
+/* Claude Code: user message has a subtle background (userMessageBackground in
+ * theme.ts: rgb(55,55,55) on dark, rgb(240,240,240) on light). No prefix
+ * glyph, no bold, no border. We use ansi_bright_black to stay theme-aware. */
 .user-message-content {
     width: 1fr;
     height: auto;
-    text-style: bold;
-    padding-left: 1;
-    border-left: heavy $mistral_orange;
-    color: $mistral_orange;
+    padding: 0 1;
+    background: ansi_bright_black 18%;
+    color: ansi_default;
 }
 
 .assistant-message {
@@ -273,14 +290,16 @@ Markdown {
     height: auto;
 }
 
+/* Thinking block: Claude Code uses the brand orange spinner while reasoning,
+ * dims to subtle gray once collapsed. */
 .reasoning-indicator {
     width: auto;
     height: auto;
-    color: ansi_bright_black;
+    color: $claude_brand;
     margin-right: 1;
 
     &.success {
-        color: ansi_green;
+        color: ansi_bright_black;
     }
 }
 
@@ -345,18 +364,20 @@ Markdown {
     color: ansi_bright_black;
 }
 
+/* Claude Code system-level messages: warning amber, error red/pink, plus the
+ * interrupt color is the same warning amber. */
 .interrupt-content {
     width: 1fr;
     height: auto;
     margin: 0;
-    color: ansi_yellow;
+    color: $claude_warning;
 }
 
 .error-content {
     width: 1fr;
     height: auto;
     margin: 0;
-    color: ansi_red;
+    color: $claude_error;
     text-style: bold;
 }
 
@@ -364,7 +385,7 @@ Markdown {
     width: 1fr;
     height: auto;
     margin: 0;
-    color: ansi_yellow;
+    color: $claude_warning;
 }
 
 .user-command-content {
@@ -407,19 +428,19 @@ Markdown {
     height: auto;
 
     &.bash-pending {
-        color: $foreground;
+        color: $claude_brand;
     }
 
     &.bash-success {
-        color: ansi_green;
+        color: $claude_success;
     }
 
     &.bash-error {
-        color: ansi_red;
+        color: $claude_error;
     }
 
     &.bash-interrupted {
-        color: ansi_yellow;
+        color: $claude_warning;
     }
 }
 
@@ -464,15 +485,15 @@ StatusMessage {
 .status-indicator-icon {
     width: auto;
     height: auto;
-    color: ansi_default;
+    color: $claude_brand;
     margin-right: 1;
 
     &.success {
-        color: ansi_green;
+        color: $claude_brand;
     }
 
     &.error {
-        color: ansi_red;
+        color: $claude_error;
     }
 }
 
@@ -598,17 +619,19 @@ StatusMessage {
 
 .diff-removed {
     height: auto;
-    color: ansi_red;
+    color: $claude_diff_removed_word;
+    background: $claude_diff_removed_bg 30%;
 }
 
 .diff-added {
     height: auto;
-    color: ansi_green;
+    color: $claude_diff_added_word;
+    background: $claude_diff_added_bg 30%;
 }
 
 .diff-range {
     height: auto;
-    color: ansi_blue;
+    color: $claude_permission;
 }
 
 .diff-context {
@@ -716,7 +739,7 @@ StatusMessage {
 .settings-title {
     height: auto;
     text-style: bold;
-    color: ansi_blue;
+    color: $claude_brand;
 }
 
 #config-options, #mcp-options, #connectorauth-options {
@@ -764,12 +787,14 @@ StatusMessage {
     padding: 0 0 0 1;
 }
 
+/* Permission/approval dialog. Claude Code uses a bordered box with the
+ * `permission` blue accent at the top — see permissions/PermissionDialog.tsx. */
 #approval-app {
     width: 100%;
     height: auto;
     max-height: 70vh;
     background: transparent;
-    border: solid ansi_bright_black;
+    border: solid $claude_permission;
     padding: 0 1;
     margin: 0;
 }
@@ -794,7 +819,7 @@ StatusMessage {
 .approval-title {
     height: auto;
     text-style: bold;
-    color: ansi_bright_yellow;
+    color: $claude_permission;
 }
 
 .approval-tool-info-container {
@@ -862,12 +887,14 @@ StatusMessage {
     padding: 1;
 }
 
+/* AskUserQuestion modal — Claude Code paints the title in `permission` blue
+ * (see permissions/AskUserQuestionPermissionRequest/QuestionView.tsx). */
 #question-app {
     width: 100%;
     height: auto;
     max-height: 70vh;
     background: transparent;
-    border: solid ansi_bright_black;
+    border: solid $claude_permission;
     padding: 0 1;
     margin: 0;
 }
@@ -883,14 +910,14 @@ StatusMessage {
 
 .question-tabs {
     height: auto;
-    color: ansi_blue;
+    color: $claude_permission;
     margin-bottom: 1;
 }
 
 .question-title {
     height: auto;
     text-style: bold;
-    color: ansi_blue;
+    color: $claude_permission;
     margin-bottom: 1;
 }
 
@@ -900,7 +927,7 @@ StatusMessage {
 }
 
 .question-option-selected {
-    color: ansi_blue;
+    color: $claude_permission;
     text-style: bold;
 }
 
@@ -1045,7 +1072,7 @@ NarratorStatus {
 
 .petit-chat {
     color: ansi_default;
-    width: 12;
+    width: 10;
 }
 
 .whats-new-message {
@@ -1147,6 +1174,8 @@ NarratorStatus {
     scrollbar-size: 1 1;
 }
 
+/* Pickers (model / thinking / session) use the Claude brand orange for their
+ * title and a thin gray border. */
 #modelpicker-app {
     width: 100%;
     height: auto;
@@ -1164,7 +1193,7 @@ NarratorStatus {
 .modelpicker-title {
     height: auto;
     text-style: bold;
-    color: ansi_blue;
+    color: $claude_brand;
 }
 
 #modelpicker-options {
@@ -1203,7 +1232,7 @@ NarratorStatus {
 .thinkingpicker-title {
     height: auto;
     text-style: bold;
-    color: ansi_blue;
+    color: $claude_brand;
 }
 
 #thinkingpicker-options {
@@ -1254,7 +1283,7 @@ FeedbackBar {
 .rewind-title {
     height: auto;
     text-style: bold;
-    color: ansi_blue;
+    color: $claude_brand;
 }
 
 .rewind-option {

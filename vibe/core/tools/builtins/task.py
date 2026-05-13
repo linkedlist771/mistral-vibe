@@ -50,7 +50,14 @@ class TaskResult(BaseModel):
 
 class TaskToolConfig(BaseToolConfig):
     permission: ToolPermission = ToolPermission.ASK
-    allowlist: list[str] = Field(default=[BuiltinAgentName.EXPLORE])
+    allowlist: list[str] = Field(
+        default_factory=lambda: [
+            BuiltinAgentName.EXPLORE,
+            BuiltinAgentName.GENERAL_PURPOSE,
+            BuiltinAgentName.CODE_REVIEWER,
+            BuiltinAgentName.PLAN_SUBAGENT,
+        ]
+    )
 
 
 class Task(
@@ -68,8 +75,8 @@ class Task(
     def get_call_display(cls, event: ToolCallEvent) -> ToolCallDisplay:
         args = event.args
         if isinstance(args, TaskArgs):
-            return ToolCallDisplay(summary=f"Running {args.agent} agent: {args.task}")
-        return ToolCallDisplay(summary="Running subagent")
+            return ToolCallDisplay(summary=f"Agent({args.agent}, {args.task})")
+        return ToolCallDisplay(summary="Agent()")
 
     @classmethod
     def get_result_display(cls, event: ToolResultEvent) -> ToolResultDisplay:

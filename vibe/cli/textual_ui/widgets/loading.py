@@ -14,8 +14,12 @@ from textual.widgets import Static
 from vibe.cli.textual_ui.constants import MistralColors
 from vibe.cli.textual_ui.widgets.no_markup_static import NoMarkupStatic
 from vibe.cli.textual_ui.widgets.spinner import SpinnerMixin, SpinnerType
+from vibe.cli.textual_ui.widgets.spinner_verbs import random_verb
 
-DEFAULT_LOADING_STATUS = "Generating"
+DEFAULT_LOADING_STATUS = "Thinking"
+# Frames between picking a new verb. Roughly matches Claude Code's GlimmerMessage
+# pacing — about a verb-swap every couple of seconds at the 50ms frame rate.
+VERB_CYCLE_FRAMES = 40
 
 
 def _format_elapsed(seconds: int) -> str:
@@ -31,14 +35,17 @@ def _format_elapsed(seconds: int) -> str:
 
 
 class LoadingWidget(SpinnerMixin, Static):
+    # Claude Code uses a tighter shimmer pulse around the brand orange instead
+    # of the rainbow gradient. Keep the structural list of TARGET_COLORS so the
+    # transition animation still runs but anchor it on Claude orange.
     TARGET_COLORS = (
-        MistralColors.YELLOW,
-        MistralColors.ORANGE_LIGHT,
-        MistralColors.ORANGE,
-        MistralColors.ORANGE_DARK,
-        MistralColors.RED,
+        "#d77757",  # claude
+        "#f59575",  # claudeShimmer (lighter)
+        "#d77757",
+        "#a05a3f",  # darker for cycle bottom
+        "#d77757",
     )
-    SPINNER_TYPE = SpinnerType.SNAKE
+    SPINNER_TYPE = SpinnerType.CLAUDE
 
     EASTER_EGGS: ClassVar[list[str]] = [
         "Eating a chocolatine",
@@ -76,10 +83,14 @@ class LoadingWidget(SpinnerMixin, Static):
     def __init__(self, status: str | None = None, *, show_hint: bool = True) -> None:
         super().__init__(classes="loading-widget")
         self.init_spinner()
+        # Track whether the caller pinned a specific status. If they didn't,
+        # we rotate through the SPINNER_VERBS list to match Claude Code.
+        self._status_override: str | None = status
         self.status = status or self._get_default_status()
         self.current_color_index = 0
         self._color_direction = 1
         self.transition_progress = 0
+        self._verb_frame_counter = 0
         self._indicator_widget: Static | None = None
         self._status_widget: Static | None = None
         self.hint_widget: Static | None = None
@@ -107,7 +118,9 @@ class LoadingWidget(SpinnerMixin, Static):
         return None
 
     def _get_default_status(self) -> str:
-        return self._get_easter_egg() or DEFAULT_LOADING_STATUS
+        # Vibe easter eggs still win when they roll a hit; otherwise fall back
+        # to one of Claude Code's spinner verbs (Brewing, Cogitating, ...).
+        return self._get_easter_egg() or random_verb()
 
     def _apply_easter_egg(self, status: str) -> str:
         return self._get_easter_egg() or status
@@ -122,6 +135,7 @@ class LoadingWidget(SpinnerMixin, Static):
             self._pause_start = None
 
     def set_status(self, status: str) -> None:
+        self._status_override = status
         self.status = self._apply_easter_egg(status)
         if self._status_widget:
             self._status_widget.update(self._build_status_text())
@@ -192,6 +206,20 @@ class LoadingWidget(SpinnerMixin, Static):
             if not 0 < self.current_color_index < len(self.TARGET_COLORS) - 1:
                 self._color_direction *= -1
             self.transition_progress = 0
+
+        # Swap the verb every VERB_CYCLE_FRAMES ticks unless the caller pinned
+        # a status (e.g. "Compacting"). Mirrors Claude Code's verb shimmer.
+        self._verb_frame_counter += 1
+        if (
+            self._status_override is None
+            and self._verb_frame_counter >= VERB_CYCLE_FRAMES
+        ):
+            self._verb_frame_counter = 0
+            new_verb = self._get_default_status()
+            if new_verb != self.status:
+                self.status = new_verb
+                if self._status_widget:
+                    self._status_widget.update(self._build_status_text())
 
         if self.hint_widget and self.start_time is not None:
             paused = self._paused_total + (

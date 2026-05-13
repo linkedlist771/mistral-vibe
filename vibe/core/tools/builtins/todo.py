@@ -72,12 +72,12 @@ class Todo(
     def format_call_display(cls, args: TodoArgs) -> ToolCallDisplay:
         match args.action:
             case "read":
-                return ToolCallDisplay(summary="Reading todos")
+                return ToolCallDisplay(summary="TodoWrite(read)")
             case "write":
                 count = len(args.todos) if args.todos else 0
-                return ToolCallDisplay(summary=f"Writing {count} todos")
+                return ToolCallDisplay(summary=f"TodoWrite({count} todos)")
             case _:
-                return ToolCallDisplay(summary=f"Unknown action: {args.action}")
+                return ToolCallDisplay(summary=f"TodoWrite({args.action})")
 
     @classmethod
     def get_result_display(cls, event: ToolResultEvent) -> ToolResultDisplay:

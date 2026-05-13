@@ -36,6 +36,7 @@ def test_spawn_cli_to_send_and_receive_message(
         child.expect(pexpect.EOF, timeout=10)
 
     output = captured.getvalue()
+    assert "Welcome to Claude Code" not in output
     assert "Welcome to Mistral Vibe" not in output
 
     request_payload = streaming_mock_server.requests[-1]

@@ -59,9 +59,9 @@ class WriteFile(
     @classmethod
     def format_call_display(cls, args: WriteFileArgs) -> ToolCallDisplay:
         tag = " (scratchpad)" if is_scratchpad_path(args.path) else ""
-        overwrite = " (overwrite)" if args.overwrite else ""
+        overwrite = ", overwrite" if args.overwrite else ""
         return ToolCallDisplay(
-            summary=f"Writing {args.path}{overwrite}{tag}", content=args.content
+            summary=f"Write({args.path}{overwrite}){tag}", content=args.content
         )
 
     @classmethod

@@ -50,7 +50,7 @@ class ExitPlanMode(
 
     @classmethod
     def format_call_display(cls, args: ExitPlanModeArgs) -> ToolCallDisplay:
-        return ToolCallDisplay(summary="Ready to exit plan mode")
+        return ToolCallDisplay(summary="ExitPlanMode()")
 
     @classmethod
     def format_result_display(cls, result: ExitPlanModeResult) -> ToolResultDisplay:

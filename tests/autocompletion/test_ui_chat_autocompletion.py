@@ -92,13 +92,14 @@ async def test_arrow_navigation_cycles_through_suggestions(vibe_app: VibeApp) ->
     async with vibe_app.run_test() as pilot:
         popup = vibe_app.query_one(CompletionPopup)
 
-        await pilot.press(*"/co")
+        # Prefix /con narrows to a single suggestion; use /com to get >=2 to test cycling.
+        await pilot.press(*"/com")
 
-        ensure_selected_command(popup, "/config")
+        ensure_selected_command(popup, "/commit")
         await pilot.press("down")
         ensure_selected_command(popup, "/compact")
         await pilot.press("up")
-        ensure_selected_command(popup, "/config")
+        ensure_selected_command(popup, "/commit")
 
 
 @pytest.mark.asyncio

@@ -69,10 +69,18 @@ class PulseSpinner(Spinner):
     )
 
 
+class ClaudeSpinner(Spinner):
+    """Replicates Claude Code's TUI spinner glyphs (constants/figures + Spinner/utils)."""
+
+    _BASE: ClassVar[tuple[str, ...]] = ("·", "✢", "*", "✶", "✻", "✽")
+    FRAMES: ClassVar[tuple[str, ...]] = _BASE + tuple(reversed(_BASE))
+
+
 class SpinnerType(Enum):
     BRAILLE = auto()
     PULSE = auto()
     SNAKE = auto()
+    CLAUDE = auto()
 
 
 class SnakeSpinner(Spinner):
@@ -132,6 +140,7 @@ _SPINNER_CLASSES: dict[SpinnerType, type[Spinner]] = {
     SpinnerType.BRAILLE: BrailleSpinner,
     SpinnerType.PULSE: PulseSpinner,
     SpinnerType.SNAKE: SnakeSpinner,
+    SpinnerType.CLAUDE: ClaudeSpinner,
 }
 
 
@@ -179,11 +188,11 @@ class SpinnerMixin:
             self._spinner_timer.stop()
             self._spinner_timer = None
         if self._indicator_widget:
+            # Match Claude Code's bullet (constants/figures.ts BLACK_CIRCLE)
+            self._indicator_widget.update("●")
             if success:
-                self._indicator_widget.update("✓")
                 self._indicator_widget.add_class("success")
             else:
-                self._indicator_widget.update("✕")
                 self._indicator_widget.add_class("error")
         if self._status_text_widget and self.COMPLETED_TEXT:
             self._status_text_widget.update(self.COMPLETED_TEXT)

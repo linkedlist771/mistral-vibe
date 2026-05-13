@@ -43,6 +43,9 @@ class BuiltinAgentName(StrEnum):
     AUTO_APPROVE = "auto-approve"
     EXPLORE = "explore"
     LEAN = "lean"
+    GENERAL_PURPOSE = "general-purpose"
+    CODE_REVIEWER = "code-reviewer"
+    PLAN_SUBAGENT = "plan-subagent"
 
 
 @dataclass(frozen=True)
@@ -155,7 +158,61 @@ EXPLORE = AgentProfile(
     description="Read-only subagent for codebase exploration",
     safety=AgentSafety.SAFE,
     agent_type=AgentType.SUBAGENT,
-    overrides={"enabled_tools": ["grep", "read_file"], "system_prompt_id": "explore"},
+    overrides={"enabled_tools": ["grep", "read_file", "glob"], "system_prompt_id": "explore"},
+)
+
+GENERAL_PURPOSE = AgentProfile(
+    name=BuiltinAgentName.GENERAL_PURPOSE,
+    display_name="General Purpose",
+    description=(
+        "General-purpose subagent for researching complex questions, "
+        "searching for code, and executing multi-step tasks. Use when you "
+        "are searching for a keyword or file and are not confident that "
+        "you will find the right match in the first few tries."
+    ),
+    safety=AgentSafety.NEUTRAL,
+    agent_type=AgentType.SUBAGENT,
+    overrides={
+        "enabled_tools": [
+            "bash",
+            "read_file",
+            "grep",
+            "glob",
+            "web_fetch",
+            "web_search",
+            "todo",
+        ]
+    },
+)
+
+CODE_REVIEWER = AgentProfile(
+    name=BuiltinAgentName.CODE_REVIEWER,
+    display_name="Code Reviewer",
+    description=(
+        "Independent reviewer subagent. Use for second opinions on code changes, "
+        "migrations, or design decisions. Reads-only; returns a verdict with "
+        "specific file:line findings."
+    ),
+    safety=AgentSafety.SAFE,
+    agent_type=AgentType.SUBAGENT,
+    overrides={
+        "enabled_tools": ["bash", "read_file", "grep", "glob"],
+        "tools": {
+            "bash": {"allowlist": ["git diff", "git log", "git status", "git show"]}
+        },
+    },
+)
+
+PLAN_SUBAGENT = AgentProfile(
+    name=BuiltinAgentName.PLAN_SUBAGENT,
+    display_name="Plan Subagent",
+    description=(
+        "Software architect subagent. Use for planning implementation strategy. "
+        "Returns a step-by-step plan with critical files identified."
+    ),
+    safety=AgentSafety.SAFE,
+    agent_type=AgentType.SUBAGENT,
+    overrides={"enabled_tools": ["read_file", "grep", "glob", "bash"]},
 )
 
 LEAN = AgentProfile(
@@ -204,5 +261,8 @@ BUILTIN_AGENTS: dict[str, AgentProfile] = {
     BuiltinAgentName.ACCEPT_EDITS: ACCEPT_EDITS,
     BuiltinAgentName.AUTO_APPROVE: AUTO_APPROVE,
     BuiltinAgentName.EXPLORE: EXPLORE,
+    BuiltinAgentName.GENERAL_PURPOSE: GENERAL_PURPOSE,
+    BuiltinAgentName.CODE_REVIEWER: CODE_REVIEWER,
+    BuiltinAgentName.PLAN_SUBAGENT: PLAN_SUBAGENT,
     BuiltinAgentName.LEAN: LEAN,
 }

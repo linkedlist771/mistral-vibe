@@ -332,14 +332,14 @@ class Grep(
 
     @classmethod
     def format_call_display(cls, args: GrepArgs) -> ToolCallDisplay:
-        summary = f"Grepping '{args.pattern}'"
+        bits = [args.pattern]
         if args.path != ".":
-            summary += f" in {args.path}"
+            bits.append(args.path)
         if args.max_matches:
-            summary += f" (max {args.max_matches} matches)"
+            bits.append(f"max={args.max_matches}")
         if not args.use_default_ignore:
-            summary += " [no-ignore]"
-        return ToolCallDisplay(summary=summary)
+            bits.append("no-ignore")
+        return ToolCallDisplay(summary=f"Grep({', '.join(bits)})")
 
     @classmethod
     def get_result_display(cls, event: ToolResultEvent) -> ToolResultDisplay:

@@ -50,7 +50,7 @@ class Skill(
 
     @classmethod
     def format_call_display(cls, args: SkillArgs) -> ToolCallDisplay:
-        return ToolCallDisplay(summary=f"Loading skill: {args.name}")
+        return ToolCallDisplay(summary=f"Skill({args.name})")
 
     @classmethod
     def get_result_display(cls, event: ToolResultEvent) -> ToolResultDisplay:

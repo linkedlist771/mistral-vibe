@@ -18,7 +18,7 @@ from vibe.setup.trusted_folders.trust_folder_dialog import (
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run the Mistral Vibe interactive CLI",
+        description="Run the Claude Code (Python) interactive CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Environment variables:\n"

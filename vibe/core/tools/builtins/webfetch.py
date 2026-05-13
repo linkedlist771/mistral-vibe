@@ -218,18 +218,16 @@ class WebFetch(
     @classmethod
     def get_call_display(cls, event: ToolCallEvent) -> ToolCallDisplay:
         if event.args is None:
-            return ToolCallDisplay(summary="webfetch")
+            return ToolCallDisplay(summary="WebFetch()")
         if not isinstance(event.args, WebFetchArgs):
-            return ToolCallDisplay(summary="webfetch")
+            return ToolCallDisplay(summary="WebFetch()")
 
         parsed = urlparse(event.args.url)
         domain = parsed.netloc or event.args.url[:50]
-        summary = f"Fetching: {domain}"
-
+        bits = [domain]
         if event.args.timeout:
-            summary += f" (timeout {event.args.timeout}s)"
-
-        return ToolCallDisplay(summary=summary)
+            bits.append(f"timeout={event.args.timeout}s")
+        return ToolCallDisplay(summary=f"WebFetch({', '.join(bits)})")
 
     @classmethod
     def get_result_display(cls, event: ToolResultEvent) -> ToolResultDisplay:

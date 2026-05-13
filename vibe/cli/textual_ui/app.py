@@ -1699,6 +1699,146 @@ class VibeApp(App):  # noqa: PLR0904
     async def _show_data_retention(self, **kwargs: Any) -> None:
         await self._mount_and_scroll(UserCommandMessage(DATA_RETENTION_MESSAGE))
 
+    async def _show_version(self, **kwargs: Any) -> None:
+        from vibe import __version__
+
+        await self._mount_and_scroll(
+            UserCommandMessage(f"## Vibe (Claude Code clone)\n\nVersion: **{__version__}**")
+        )
+
+    async def _show_agents(self, **kwargs: Any) -> None:
+        agents = self.agent_loop.agent_manager.available_agents
+        lines = ["## Available agents", ""]
+        active = (
+            self.agent_loop.agent_manager.active_profile.name
+            if self.agent_loop.agent_manager.active_profile
+            else None
+        )
+        for name, profile in sorted(agents.items()):
+            marker = " ← active" if name == active else ""
+            desc = profile.description or "(no description)"
+            lines.append(f"- **{name}**{marker} — {desc}")
+        if not agents:
+            lines.append("_No agents configured._")
+        await self._mount_and_scroll(UserCommandMessage("\n".join(lines)))
+
+    async def _show_skills(self, **kwargs: Any) -> None:
+        skills = self.agent_loop.skill_manager.available_skills
+        lines = ["## Available skills", ""]
+        invocable = [(n, s) for n, s in skills.items() if s.user_invocable]
+        other = [(n, s) for n, s in skills.items() if not s.user_invocable]
+        if invocable:
+            lines.append("### Slash-invocable")
+            for name, info in sorted(invocable):
+                lines.append(f"- **/{name}** — {info.description}")
+            lines.append("")
+        if other:
+            lines.append("### Context-only")
+            for name, info in sorted(other):
+                lines.append(f"- **{name}** — {info.description}")
+        if not skills:
+            lines.append("_No skills available._")
+        await self._mount_and_scroll(UserCommandMessage("\n".join(lines)))
+
+    async def _show_memory(self, cmd_args: str = "", **kwargs: Any) -> None:
+        from vibe.core.memory import get_memory_store
+
+        store = get_memory_store()
+        entries = store.list_memories()
+        lines = ["## Memory", "", f"Memory dir: `{store.memory_dir}`", ""]
+        if not entries:
+            lines.append("_No memories stored yet._")
+        else:
+            lines.append("### Stored memories")
+            for name, entry in entries:
+                lines.append(f"- **{name}** ({entry.metadata_type}) — {entry.description}")
+        await self._mount_and_scroll(UserCommandMessage("\n".join(lines)))
+
+    async def _show_doctor(self, **kwargs: Any) -> None:
+        from vibe import __version__
+        from vibe.core.paths import VIBE_HOME
+
+        cfg = self.agent_loop.config
+        active_agent = (
+            self.agent_loop.agent_manager.active_profile.name
+            if self.agent_loop.agent_manager.active_profile
+            else "-"
+        )
+        lines = [
+            "## Doctor",
+            "",
+            f"- **Vibe version**: {__version__}",
+            f"- **VIBE_HOME**: `{VIBE_HOME.path}`",
+            f"- **CWD**: `{Path.cwd()}`",
+            f"- **Active model**: {cfg.active_model}",
+            f"- **Active agent**: {active_agent}",
+            f"- **Tools discovered**: {len(self.agent_loop.tool_manager.available_tools)}",
+            f"- **Skills available**: {len(self.agent_loop.skill_manager.available_skills)}",
+            f"- **Agents available**: {len(self.agent_loop.agent_manager.available_agents)}",
+            f"- **MCP servers**: {len(cfg.mcp_servers)}",
+        ]
+        await self._mount_and_scroll(UserCommandMessage("\n".join(lines)))
+
+    async def _show_tasks(self, **kwargs: Any) -> None:
+        from vibe.core.tasks_store import get_default_store
+
+        store = get_default_store()
+        tasks = store.list()
+        lines = ["## Persistent tasks", ""]
+        if not tasks:
+            lines.append("_No tasks in the store. Create one with the `task_create` tool._")
+        else:
+            for t in tasks:
+                marker = {
+                    "pending": "○",
+                    "in_progress": "◐",
+                    "completed": "●",
+                    "deleted": "✗",
+                }.get(str(t.status), "·")
+                lines.append(f"- {marker} `{t.id}` **{t.subject}** ({t.status})")
+        await self._mount_and_scroll(UserCommandMessage("\n".join(lines)))
+
+    async def _trigger_skill(self, skill_name: str, cmd_args: str = "") -> None:
+        if not self.agent_loop:
+            return
+        skill = self.agent_loop.skill_manager.available_skills.get(skill_name)
+        if skill is None:
+            await self._mount_and_scroll(
+                ErrorMessage(
+                    f"Skill `{skill_name}` is not available.",
+                    collapsed=self._tools_collapsed,
+                )
+            )
+            return
+        from vibe.core.skills.manager import SkillManager
+        from vibe.core.skills.models import ParsedSkillCommand
+
+        user_input = f"/{skill_name}"
+        if cmd_args:
+            user_input = f"{user_input} {cmd_args}"
+        parsed = ParsedSkillCommand(
+            name=skill.name,
+            content=skill.prompt,
+            extra_instructions=cmd_args or None,
+        )
+        prompt = SkillManager.build_skill_prompt(user_input, parsed)
+        await self._handle_user_message(prompt)
+
+    async def _run_init_skill(self, cmd_args: str = "", **kwargs: Any) -> None:
+        await self._trigger_skill("init", cmd_args)
+
+    async def _run_review_skill(self, cmd_args: str = "", **kwargs: Any) -> None:
+        await self._trigger_skill("review", cmd_args)
+
+    async def _run_security_review_skill(self, cmd_args: str = "", **kwargs: Any) -> None:
+        await self._trigger_skill("security-review", cmd_args)
+
+    async def _run_commit_skill(self, cmd_args: str = "", **kwargs: Any) -> None:
+        await self._trigger_skill("commit", cmd_args)
+
+    async def _run_pr_skill(self, cmd_args: str = "", **kwargs: Any) -> None:
+        await self._trigger_skill("pr", cmd_args)
+
     async def _rename_local_session(self, title: str) -> str:
         session_logger = self.agent_loop.session_logger
         if not session_logger.enabled or session_logger.session_metadata is None:
@@ -3029,7 +3169,7 @@ class VibeApp(App):  # noqa: PLR0904
             return
         with self.suspend():
             rprint(
-                "Mistral Vibe has been suspended. Run [bold cyan]fg[/bold cyan] to bring Mistral Vibe back."
+                "Claude Code (Python) has been suspended. Run [bold cyan]fg[/bold cyan] to bring it back."
             )
             os.kill(os.getpid(), signal.SIGTSTP)
 

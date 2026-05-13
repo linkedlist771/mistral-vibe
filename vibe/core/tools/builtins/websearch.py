@@ -133,10 +133,10 @@ class WebSearch(
     @classmethod
     def get_call_display(cls, event: ToolCallEvent) -> ToolCallDisplay:
         if event.args is None:
-            return ToolCallDisplay(summary="websearch")
+            return ToolCallDisplay(summary="WebSearch()")
         if not isinstance(event.args, WebSearchArgs):
-            return ToolCallDisplay(summary="websearch")
-        return ToolCallDisplay(summary=f"Searching the web: '{event.args.query}'")
+            return ToolCallDisplay(summary="WebSearch()")
+        return ToolCallDisplay(summary=f"WebSearch({event.args.query})")
 
     @classmethod
     def get_result_display(cls, event: ToolResultEvent) -> ToolResultDisplay:

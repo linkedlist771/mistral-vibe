@@ -198,14 +198,15 @@ class ReadFile(
     @classmethod
     def format_call_display(cls, args: ReadFileArgs) -> ToolCallDisplay:
         tag = " (scratchpad)" if is_scratchpad_path(args.path) else ""
-        summary = f"Reading {args.path}"
+        summary = f"Read({args.path}"
         if args.offset > 0 or args.limit is not None:
             parts = []
             if args.offset > 0:
                 parts.append(f"from line {args.offset}")
             if args.limit is not None:
                 parts.append(f"limit {args.limit} lines")
-            summary += f" ({', '.join(parts)})"
+            summary += f", {', '.join(parts)}"
+        summary += ")"
         return ToolCallDisplay(summary=f"{summary}{tag}")
 
     @classmethod

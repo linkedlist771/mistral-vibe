@@ -231,7 +231,7 @@ def test_vibe_acp_setup_shows_onboarding_and_exits_on_cancel(
     child.logfile_read = captured
 
     try:
-        child.expect(ansi_tolerant_pattern("Welcome to Mistral Vibe"), timeout=10)
+        child.expect(ansi_tolerant_pattern("Welcome to Claude Code"), timeout=10)
         child.sendcontrol("c")
         child.expect(pexpect.EOF, timeout=10)
     finally:

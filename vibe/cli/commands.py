@@ -174,6 +174,61 @@ class CommandRegistry:
                 description="Show data retention information",
                 handler="_show_data_retention",
             ),
+            "agents": Command(
+                aliases=frozenset(["/agents"]),
+                description="List available agents (builtin + project + user)",
+                handler="_show_agents",
+            ),
+            "skills": Command(
+                aliases=frozenset(["/skills"]),
+                description="List available skills (slash-invocable)",
+                handler="_show_skills",
+            ),
+            "memory": Command(
+                aliases=frozenset(["/memory"]),
+                description="Show stored memory files and the memory index",
+                handler="_show_memory",
+            ),
+            "doctor": Command(
+                aliases=frozenset(["/doctor"]),
+                description="Diagnostic info: config, paths, API key, environment",
+                handler="_show_doctor",
+            ),
+            "tasks": Command(
+                aliases=frozenset(["/tasks"]),
+                description="List persistent tasks from the task store",
+                handler="_show_tasks",
+            ),
+            "version": Command(
+                aliases=frozenset(["/version"]),
+                description="Show the current Vibe version",
+                handler="_show_version",
+            ),
+            "init": Command(
+                aliases=frozenset(["/init"]),
+                description="Generate AGENTS.md / CLAUDE.md for this project",
+                handler="_run_init_skill",
+            ),
+            "review": Command(
+                aliases=frozenset(["/review"]),
+                description="Review the current branch / pending changes",
+                handler="_run_review_skill",
+            ),
+            "security-review": Command(
+                aliases=frozenset(["/security-review"]),
+                description="Security audit of the current branch",
+                handler="_run_security_review_skill",
+            ),
+            "commit": Command(
+                aliases=frozenset(["/commit"]),
+                description="Create a git commit for the current changes",
+                handler="_run_commit_skill",
+            ),
+            "pr": Command(
+                aliases=frozenset(["/pr"]),
+                description="Create a pull request with `gh pr create`",
+                handler="_run_pr_skill",
+            ),
         }
 
     @property

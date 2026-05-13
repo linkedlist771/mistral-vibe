@@ -94,7 +94,7 @@ class SearchReplace(
         tag = " (scratchpad)" if is_scratchpad_path(args.file_path) else ""
         blocks = cls._parse_search_replace_blocks(args.content)
         return ToolCallDisplay(
-            summary=f"Patching {args.file_path} ({len(blocks)} blocks){tag}",
+            summary=f"Edit({args.file_path}, {len(blocks)} blocks){tag}",
             content=args.content,
         )
 

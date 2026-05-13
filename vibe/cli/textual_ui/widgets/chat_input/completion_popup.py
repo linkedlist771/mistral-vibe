@@ -39,7 +39,11 @@ class CompletionPopup(VerticalScroll):
             text = Text()
             label_style = "bold reverse" if idx == selected else "bold"
             description_style = "italic" if idx == selected else "dim"
+            glyph_style = "bold #D77757" if idx == selected else "#888888"
 
+            glyph = self._icon_for(label)
+            if glyph:
+                text.append(f"{glyph} ", style=glyph_style)
             text.append(self._display_label(label), style=label_style)
             if description:
                 text.append("  ")
@@ -68,9 +72,28 @@ class CompletionPopup(VerticalScroll):
             return label[1:]
         return label
 
+    @staticmethod
+    def _icon_for(label: str) -> str:
+        """Pick a leading glyph to mimic Claude Code's autocomplete popup.
+
+        Mirrors ``PromptInputFooterSuggestions.tsx`` where:
+          * ``+`` = file completion
+          * ``◇`` = MCP resource
+          * ``*`` = skill / agent / slash command
+        """
+        if label.startswith("@"):
+            return "+"
+        if label.startswith("/"):
+            return "*"
+        if label.startswith("mcp:") or label.startswith("◇"):
+            return "◇"
+        return ""
+
     @classmethod
     def rendered_text_length(cls, label: str, description: str) -> int:
         text_length = cell_len(cls._display_label(label)) + cell_len(description)
         if description:
             text_length += 2
+        if cls._icon_for(label):
+            text_length += 2  # glyph + space
         return text_length

@@ -160,7 +160,9 @@ class AssistantMessage(StreamingMessageBase):
 
 
 class ReasoningMessage(SpinnerMixin, StreamingMessageBase):
-    SPINNER_TYPE = SpinnerType.PULSE
+    # Match Claude Code's AssistantThinkingMessage: ClaudeSpinner during the
+    # reasoning stream, then collapse to "Thought".
+    SPINNER_TYPE = SpinnerType.CLAUDE
     SPINNING_TEXT = "Thinking"
     COMPLETED_TEXT = "Thought"
 
@@ -264,7 +266,9 @@ class InterruptMessage(Static):
 
 
 class BashOutputMessage(SpinnerMixin, Static):
-    SPINNER_TYPE = SpinnerType.PULSE
+    # Use the Claude Code-style spinner so the `$ ` prompt animates with the
+    # same `·✢*✶✻✽` frames as the rest of the UI.
+    SPINNER_TYPE = SpinnerType.CLAUDE
 
     def __init__(
         self,

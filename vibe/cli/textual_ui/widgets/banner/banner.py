@@ -9,6 +9,7 @@ from textual.reactive import reactive
 from textual.widgets import Static
 
 from vibe import __version__
+from vibe.cli.textual_ui.widgets.banner.clawd import Clawd
 from vibe.cli.textual_ui.widgets.banner.petit_chat import PetitChat
 from vibe.cli.textual_ui.widgets.no_markup_static import NoMarkupStatic
 from vibe.core.config import VibeConfig
@@ -54,11 +55,11 @@ class Banner(Static):
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="banner-container"):
-            yield PetitChat(animate=self._animated)
+            yield Clawd(animate=self._animated)
 
             with Vertical(id="banner-info"):
                 with Horizontal(classes="banner-line"):
-                    yield NoMarkupStatic("Mistral Vibe", id="banner-brand")
+                    yield NoMarkupStatic("Claude Code (Python)", id="banner-brand")
                     yield NoMarkupStatic(" ", classes="banner-spacer")
                     yield NoMarkupStatic(f"v{__version__} · ", classes="banner-meta")
                     yield NoMarkupStatic("", id="banner-model")
@@ -84,7 +85,7 @@ class Banner(Static):
 
     def freeze_animation(self) -> None:
         if self._animated:
-            self.query_one(PetitChat).freeze_animation()
+            self.query_one(Clawd).freeze_animation()
 
     def set_state(
         self,

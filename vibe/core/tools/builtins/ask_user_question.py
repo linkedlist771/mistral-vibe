@@ -91,8 +91,10 @@ class AskUserQuestion(
     def format_call_display(cls, args: AskUserQuestionArgs) -> ToolCallDisplay:
         count = len(args.questions)
         if count == 1:
-            return ToolCallDisplay(summary=f"Asking: {args.questions[0].question}")
-        return ToolCallDisplay(summary=f"Asking {count} questions")
+            return ToolCallDisplay(
+                summary=f"AskUserQuestion({args.questions[0].question})"
+            )
+        return ToolCallDisplay(summary=f"AskUserQuestion({count} questions)")
 
     @classmethod
     def get_result_display(cls, event: ToolResultEvent) -> ToolResultDisplay:

@@ -12,7 +12,7 @@ from vibe.cli.textual_ui.widgets.no_markup_static import NoMarkupStatic
 from vibe.setup.onboarding.base import OnboardingScreen
 
 WELCOME_PREFIX = "Welcome to "
-WELCOME_HIGHLIGHT = "Mistral Vibe"
+WELCOME_HIGHLIGHT = "Claude Code"
 WELCOME_SUFFIX = " - Let's get you started!"
 WELCOME_TEXT = WELCOME_PREFIX + WELCOME_HIGHLIGHT + WELCOME_SUFFIX
 
@@ -21,17 +21,19 @@ HIGHLIGHT_END = HIGHLIGHT_START + len(WELCOME_HIGHLIGHT)
 
 BUTTON_TEXT = "Press Enter ↵"
 
+# Gradient anchored on Claude's brand orange (#D77757) shimmering toward its
+# lighter shimmer color (#F59575), mirroring claudeShimmer in theme.ts.
 GRADIENT_COLORS = [
-    "#ff6b00",
-    "#ff7b00",
-    "#ff8c00",
-    "#ff9d00",
-    "#ffae00",
-    "#ffbf00",
-    "#ffae00",
-    "#ff9d00",
-    "#ff8c00",
-    "#ff7b00",
+    "#d77757",
+    "#dd825f",
+    "#e38d68",
+    "#ea9772",
+    "#f0a17b",
+    "#f59575",
+    "#f0a17b",
+    "#ea9772",
+    "#e38d68",
+    "#dd825f",
 ]
 
 

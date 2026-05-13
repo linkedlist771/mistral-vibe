@@ -265,7 +265,7 @@ class Bash(
 
     @classmethod
     def format_call_display(cls, args: BashArgs) -> ToolCallDisplay:
-        return ToolCallDisplay(summary=f"bash: {args.command}")
+        return ToolCallDisplay(summary=f"Bash({args.command})")
 
     @classmethod
     def get_result_display(cls, event: ToolResultEvent) -> ToolResultDisplay:
